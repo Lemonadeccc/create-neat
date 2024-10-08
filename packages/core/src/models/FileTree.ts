@@ -143,16 +143,15 @@ class FileTree {
         file.children?.push(subTree);
       }
     } else {
-      const ejsTempalte = fs.readFileSync(src, "utf8");
-      const fileContent = ejs.render(ejsTempalte, options);
+      const ejsTemplate = fs.readFileSync(src, "utf8");
+      const fileContent = ejs.render(ejsTemplate, options);
       file.type = "file";
       file.describe = {
         fileName: path.basename(src).split(".")[0],
-        fileExtension: process.env.isTs
-          ? this.alteration[path.extname(src).slice(1)]
+        fileExtension:
+          process.env.isTs && this.alteration[path.extname(src).slice(1)]
             ? this.alteration[path.extname(src).slice(1)]
-            : path.extname(src).slice(1)
-          : path.extname(src).slice(1),
+            : path.extname(src).slice(1),
         fileContent,
       };
       file.path = path.resolve(
