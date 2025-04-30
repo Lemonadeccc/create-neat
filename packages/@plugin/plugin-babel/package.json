@@ -4,7 +4,10 @@
   "description": "babel plugin for create-neat",
   "type": "module",
   "main": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "dev": "tsc -w",
+    "dev:run": "tsc -w"
+  },
   "dependencies": {
     "@babel/core": "^7.12.16",
     "babel-loader": "^8.2.2",

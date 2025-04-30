@@ -24,7 +24,8 @@ class PluginToBuildToolAPI extends ProtocolGeneratorAPI {
    * @param params.buildTool 构建工具选择
    */
   ADD_COMPILER_CONFIG(params) {
-    const { compiler, template, buildTool } = params;
+    const { compiler } = params;
+    const { template, buildTool } = this.props.preset;
     const buildToolConfigAst = this.props.buildToolConfigAst;
     // 默认生成的单独配置文件
     const compilerConfigMap = {
@@ -65,9 +66,11 @@ class PluginToBuildToolAPI extends ProtocolGeneratorAPI {
             },
           },
         ],
+        rules: [],
       }),
       rollup: ({ compiler }) => ({
         plugins: [require(`@rollup/plugin-${compiler}`)],
+        rules: [],
       }),
     };
 
@@ -77,7 +80,6 @@ class PluginToBuildToolAPI extends ProtocolGeneratorAPI {
     } else if (template === "vue") {
       test = /\.(ts|js)$/;
     }
-
     const buildToolConfig = buildToolConfigGenerators[buildTool]({ test, compiler });
     if (!buildToolConfig) {
       throw new Error(`不支持的构建工具: ${buildTool}`);

@@ -6,7 +6,7 @@ import { rmSync } from "node:fs";
 import { resolveApp } from "@laconic/utils";
 import { fileURLToPath } from "node:url";
 
-import { CLIENT_OS } from "./constants.js";
+import { CLIENT_OS, TSPluginNames } from "./constants.js";
 
 const { readFileSync } = fs;
 // 使用标准 ES 模块方式获取当前文件目录
@@ -111,3 +111,23 @@ export async function copyDirectory(data: string, target: string) {
     console.error("复制目录内容时发生错误:", error);
   }
 }
+
+/**
+ * 读取并返回插件相关内容的具体路径的函数
+ * @param pluginName 指定要读取的插件名
+ * @returns 返回相关内容具体路径的字符串
+ */
+export const judgePluginPath = (pluginName: string) => {
+  let pluginPath = `packages/@plugin/plugin-${pluginName}`;
+  let suffix = "js";
+  if (TSPluginNames.includes(pluginName)) {
+    pluginPath += "/dist";
+    suffix = "js";
+  }
+
+  return {
+    pluginIndexPath: `${pluginPath}/index.${suffix}`,
+    pluginGeneratorPath: `${pluginPath}/generator/index.${suffix}`,
+    pluginTemplatePath: `${pluginPath}/generator/template`,
+  };
+};

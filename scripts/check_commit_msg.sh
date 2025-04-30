@@ -9,8 +9,8 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 从commitlint.config.js导入rules变量
-rules=$(node -e "console.log(require('./commitlint.config.js').rules['type-enum'][2].join('|'))")
+# 使用动态导入从commitlint.config.js导入rules变量
+rules=$(node -e "import('./commitlint.config.js').then(module => { console.log(module.default.rules['type-enum'][2].join('|')); process.exit(0); }).catch(err => { console.error(err); process.exit(1); })")
 
 # 定义提交信息规范函数
 check_commit_message() {

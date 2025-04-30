@@ -42,7 +42,7 @@ export interface ProtocolProps {
  * @param rootOptions 根目录执行选项
  */
 class BaseAPI {
-  protected generator: Generator;
+  public generator: Generator;
   protected configFilesData: Record<string, ConfigFileData> = {};
   protected packageData = { dependencies: {}, devDependencies: {}, scripts: {} };
   private dependenciesKeys = ["dependencies", "devDependencies"];
@@ -182,6 +182,30 @@ class BaseAPI {
       packageData: this.packageData,
       configFilesData: this.configFilesData,
     };
+  }
+
+  /**
+   * 获取用户预设
+   * @returns {Preset} 用户预设
+   */
+  getPreset() {
+    return this.generator.getPreset();
+  }
+
+  /**
+   * 获取构建工具类型
+   * @returns {buildToolType} 构建工具类型
+   */
+  getBuildTool() {
+    return this.generator.buildTool;
+  }
+
+  /**
+   * 获取模板名称
+   * @returns {string} 模板名称
+   */
+  getTemplateName() {
+    return this.generator.templateName;
   }
 }
 

@@ -2,5 +2,9 @@
   "name": "@laconic/plugin-element",
   "version": "1.0.0",
   "description": "element plugin for vue",
-  "dependencies": {}
+  "dependencies": {},
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -w"
+  }
 }

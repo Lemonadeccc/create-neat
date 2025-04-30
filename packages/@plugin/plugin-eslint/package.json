@@ -4,6 +4,9 @@
   "description": "eslint plugin for crate-neat",
   "type": "module",
   "main": "index.ts",
+  "scripts": {
+    "dev": "tsc -w"
+  },
   "engines": {
     "node": ">=16.0.0"
   }

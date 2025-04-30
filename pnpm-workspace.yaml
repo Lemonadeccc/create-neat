@@ -4,3 +4,4 @@ packages:
   - "packages/@plugin/*"
   - "example/*"
   - "docs"
+  - "packages/core/*"

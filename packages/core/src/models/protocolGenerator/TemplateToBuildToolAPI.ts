@@ -1,7 +1,8 @@
 import path from "path";
 
-import { createConfigByParseAst } from "../../utils/ast/parseAst.js";
-import { relativePathToRoot } from "../../utils/constants.js";
+import { createConfigByParseAst, Options } from "../../utils/ast/parseAst.js";
+import { relativePathToRoot, TSPluginNames } from "../../utils/constants.js";
+import { getDefaultExport } from "../../utils/getDefaultExport.js";
 
 import ProtocolGeneratorAPI from "./ProtocolGeneratorAPI.js";
 
@@ -28,7 +29,7 @@ class TemplateToBuildToolAPI extends ProtocolGeneratorAPI {
      */
     const resolvedPath = path.resolve(rootDirectory, modulePath);
     try {
-      const module = await require(resolvedPath);
+      const module = await import(resolvedPath);
       return module;
     } catch (error) {
       console.error(`Error loading module at ${resolvedPath}:`, error);
@@ -39,9 +40,13 @@ class TemplateToBuildToolAPI extends ProtocolGeneratorAPI {
   async ADD_CONFIG(params) {
     //这里 有两种插入方式，一种是利用传进来的 content 手动配置去加，另一种是利用已有的插件（例如 plugin-babel）来做固定的配置插入（实际上是原有方案。
     //这样就解决了普通插件和特殊插件的配置插入问题，比如如果是个特殊插件或者是框架独有的，可以用 content 插入，而普通的通用插件，则使用第二种方式插入。
-    const content = params.content;
-    if (content) {
-      console.log(content);
+    const content = params.params.content;
+    if (content?.rules || content?.plugins) {
+      const options: Options = {
+        rules: content?.rules,
+        plugins: [],
+      };
+      createConfigByParseAst(this.props.preset.buildTool, options, this.props.buildToolConfigAst);
     }
 
     const { buildTool, template, plugins } = this.props.preset;
@@ -49,11 +54,15 @@ class TemplateToBuildToolAPI extends ProtocolGeneratorAPI {
     for (const plugin in plugins) {
       if (Object.prototype.hasOwnProperty.call(plugins, plugin)) {
         // 确保只遍历对象自身的属性
-        const entryPath = `@plugin/plugin-${plugin}/index.cjs`;
+        let entryPath = `@plugin/plugin-${plugin}/index.cjs`;
+        /** @todo TS 插件路径适配 完成后删除 */
+
+        if (TSPluginNames.includes(plugin)) {
+          entryPath = `@plugin/plugin-${plugin}/dist/index.js`;
+        }
         // 执行 plugin或模板的入口文件，把 config 合并到构建工具原始配置中
-        const baseEntry = await this.loadModule(
-          entryPath,
-          path.resolve(import.meta.dirname, relativePathToRoot),
+        const baseEntry = getDefaultExport(
+          await this.loadModule(entryPath, path.resolve(import.meta.dirname, relativePathToRoot)),
         );
         // 处理构建工具配置
         if (typeof baseEntry === "function") {

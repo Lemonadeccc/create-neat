@@ -9,16 +9,15 @@ import { CNRootDirectory, relativePathToRoot } from "../utils/constants.js";
 import { createFiles } from "../utils/createFiles.js";
 import { createConfigByParseAst } from "../utils/ast/parseAst.js";
 import { Preset } from "../utils/preset.js";
-import { readTemplateFileContent } from "../utils/fileController.js";
+import { judgePluginPath, readTemplateFileContent } from "../utils/fileController.js";
 import generateBuildToolConfigFromEJS from "../utils/generateBuildToolConfigFromEJS.js";
 import { buildToolType } from "../types/index.js";
+import { getDefaultExport } from "../utils/getDefaultExport.js";
 
 import GeneratorAPI from "./GeneratorAPI.js";
 import ConfigTransform from "./ConfigTransform.js";
 import TemplateAPI from "./TemplateAPI.js";
 import FileTree from "./FileTree.js";
-import BaseAPI from "./BaseAPI.js";
-
 const __dirname = import.meta.dirname;
 interface ConfigFileData {
   file: Record<string, string[]>;
@@ -109,6 +108,7 @@ async function loadModule(modulePath: string, rootDirectory: string = CNRootDire
    * @type {string}
    */
   const resolvedPath = path.resolve(rootDirectory, modulePath);
+  if (!fs.existsSync(resolvedPath)) return null;
   const fileUrlPath = pathToFileURL(resolvedPath).href;
   try {
     const module = await import(fileUrlPath);
@@ -164,11 +164,8 @@ class Generator {
 
   // 根据环境变量加载 plugin/template
   // 返回增加可选的buildTool，编译器插件(babel/swc)需要
-  async loadBase(
-    pkgPath: string,
-    modulePath: string,
-  ): Promise<(api: BaseAPI, template?: string, buildTool?: buildToolType) => Promise<any>> {
-    let baseGenerator: (api: BaseAPI, template?: string, buildTool?: buildToolType) => Promise<any>;
+  async loadBase(pkgPath: string, modulePath: string): Promise<any> {
+    let baseGenerator: any;
     if (process.env.NODE_ENV === "DEV") {
       const basePathInDev = pkgPath;
       baseGenerator = await loadModule(basePathInDev);
@@ -203,28 +200,20 @@ class Generator {
 
   // 单独处理一个插件相关文件
   async pluginGenerate(pluginName: string) {
-    const pluginGenerator = await this.loadBase(
-      `packages/@plugin/plugin-${pluginName}/generator/index.cjs`,
+    /** @todo TS 插件路径适配 完成后删除 */
+    const { pluginIndexPath, pluginGeneratorPath, pluginTemplatePath } =
+      judgePluginPath(pluginName);
+    const pluginGeneratorModule = await this.loadBase(
+      pluginGeneratorPath,
       `node_modules/${pluginName}-plugin-test-ljq`,
     );
+    const pluginGenerator = getDefaultExport(pluginGeneratorModule);
 
-    const isHusky = pluginName === "husky";
-    const isCompiler = pluginName === "babel" || pluginName === "swc";
     if (pluginGenerator && typeof pluginGenerator === "function") {
-      if (isHusky) {
-        await pluginGenerator(this.generatorAPI, JSON.stringify(this.preset));
-      } else if (isCompiler) {
-        await pluginGenerator(this.generatorAPI, this.templateName, this.buildTool);
-      } else {
-        await pluginGenerator(this.generatorAPI, this.templateName);
-      }
+      await pluginGenerator(this.generatorAPI, this.templateName);
     }
-
-    const templatePath = resolve(
-      __dirname,
-      relativePathToRoot,
-      `packages/@plugin/plugin-${pluginName}/generator/template`,
-    );
+    /** @todo TS 插件路径适配 完成后删除 */
+    const templatePath = resolve(__dirname, relativePathToRoot, pluginTemplatePath);
 
     if (fs.existsSync(templatePath)) {
       // 将文件添加到根文件树对象中,最后一起生成
@@ -233,7 +222,7 @@ class Generator {
     }
 
     // 如果插件有在构建工具配置文件中插入特有配置的需求，需要调用该函数借助ast进行插入
-    await this.mergeBuildToolConfigByAst(`packages/@plugin/plugin-${pluginName}/index.cjs`);
+    await this.mergeBuildToolConfigByAst(pluginIndexPath);
   }
 
   // 单独处理一个框架相关依赖，主要是将框架相关的依赖包插入到pkg内，以及将需要的构建工具配置合并到构建工具模板中

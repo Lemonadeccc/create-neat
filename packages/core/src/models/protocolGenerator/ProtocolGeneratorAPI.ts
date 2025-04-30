@@ -26,10 +26,9 @@ class ProtocolGeneratorAPI {
   }
 
   generator() {
-    // todo: 加入优先级调度
-    const protocol = this.protocol;
-    const protocols = this.protocols;
-    this[protocol](protocols[protocol]);
+    for (const protocol in this.protocols) {
+      this[protocol](this.protocols[protocol]);
+    }
   }
 
   ENTRY_FILE(params) {

@@ -1,6 +1,10 @@
 {
   "name": "@laconic/plugin-pinia",
+  "type": "module",
   "version": "1.0.0",
   "description": "pinia plugin for vue",
+  "scripts": {
+    "dev": "tsc -w"
+  },
   "dependencies": {}
 }
