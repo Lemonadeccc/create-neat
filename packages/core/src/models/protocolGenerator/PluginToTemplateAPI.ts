@@ -1,5 +1,3 @@
-import { FileData } from "../FileTree.js";
-
 import ProtocolGeneratorAPI from "./ProtocolGeneratorAPI.js";
 
 /**
@@ -17,26 +15,6 @@ import ProtocolGeneratorAPI from "./ProtocolGeneratorAPI.js";
 class PluginToTemplateAPI extends ProtocolGeneratorAPI {
   constructor(protocols = {}, props = {}, protocol = {}) {
     super(protocols, props, protocol);
-  }
-
-  /**
-   * 样式类插件协议
-   * @param params
-   */
-  PROCESS_STYLE_PLUGIN(params) {
-    const content = params.params.content;
-    const plugins = this.props.preset.plugins;
-    const template = this.props.preset.template;
-    const fileData: FileData = this.props.files.getFileData();
-    try {
-      for (const plugin in plugins) {
-        if (plugin === "scss") {
-          content.processStyleFiles("scss", fileData, template, content.processScss);
-        }
-      }
-    } catch (error) {
-      console.log(error);
-    }
   }
 }
 

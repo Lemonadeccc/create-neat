@@ -290,6 +290,12 @@ class Generator {
       "../../template/",
       `template-${this.templateName}/generator/template`,
     );
+    let styleType = "css"; //默认css
+    if (this.preset.plugins["scss"]) {
+      styleType = "scss";
+    } else if (this.preset.plugins["less"]) {
+      styleType = "less";
+    }
     // TODO: 此处的 ejs 渲染配置是测试用数据，实际应用中需要根据使用不同的模板进行具体的配置，具体如何实现 options 的集中管理有待商榷
     const options = {
       packageEjs: {
@@ -300,12 +306,13 @@ class Generator {
         name: "vue_test",
         data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         usePinia: !!this.preset.plugins["pinia"],
+        styleType: styleType,
       },
       ReactEjs: {
         useReactRouter: !!this.preset.plugins["react-router"],
+        styleType: styleType,
       },
     };
-
     this.files.addToTreeByTemplateDirPathAndEjs(templatePath, this.rootDirectory, options);
 
     // 为每个 plugin 创建 GeneratorAPI 实例，调用插件中的 generate
