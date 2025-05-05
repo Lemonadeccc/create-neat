@@ -29,8 +29,6 @@ const StyleReg: Record<string, RegExp> = {
  * 处理样式文件
  * @param plugin 插件名称（'css' | 'scss' | 'less'）
  * @param fileData 文件树结构
- * @param template 框架模板类型（'vue' | 'react'）
- * @param contentCallback 内容处理回调函数
  */
 function processStyleFiles(plugin: keyof typeof StyleReg, fileData: FileData): FileData {
   const regex = StyleReg[plugin];
@@ -48,8 +46,8 @@ function processStyleFiles(plugin: keyof typeof StyleReg, fileData: FileData): F
           styleFile.describe.fileExtension = plugin;
 
           // 处理文件内容
-          if (typeof styleFile.describe.fileContent === "string") {
-          }
+          // if (typeof styleFile.describe.fileContent === "string") {
+          // }
         }
       }
     }
