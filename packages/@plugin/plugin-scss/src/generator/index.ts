@@ -31,7 +31,7 @@ const StyleReg: Record<string, RegExp> = {
  * @param fileData 文件树结构
  */
 function processStyleFiles(plugin: keyof typeof StyleReg, fileData: FileData): FileData {
-  const regex = StyleReg[plugin];
+  const regex = StyleReg["css"];
 
   // 遍历文件树
   for (const srcDir of fileData.children) {
