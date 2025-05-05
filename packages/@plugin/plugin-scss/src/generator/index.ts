@@ -44,10 +44,6 @@ function processStyleFiles(plugin: keyof typeof StyleReg, fileData: FileData): F
           const newExt = `.${plugin}`;
           styleFile.path = styleFile.path.replace(ext, newExt);
           styleFile.describe.fileExtension = plugin;
-
-          // 处理文件内容
-          // if (typeof styleFile.describe.fileContent === "string") {
-          // }
         }
       }
     }
