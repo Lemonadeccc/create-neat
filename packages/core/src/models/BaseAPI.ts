@@ -184,6 +184,10 @@ class BaseAPI {
     };
   }
 
+  getCssType() {
+    return this.generator.getCssType();
+  }
+
   /**
    * 获取用户预设
    * @returns {Preset} 用户预设

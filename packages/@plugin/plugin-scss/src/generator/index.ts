@@ -2,21 +2,7 @@ import type GeneratorAPI from "@src/models/GeneratorAPI.js";
 import path from "path";
 
 import { pluginToTemplateProtocol } from "../../../../core/dist/src/configs/protocol.js";
-
-interface FileDescribe {
-  /** 文件扩展名（如 'js'、'scss'） */
-  fileExtension: string;
-  /** 文件内容（支持字符串） */
-  fileContent: string;
-  /** 其他自定义元数据 */
-  [key: string]: any;
-}
-interface FileData {
-  path: string;
-  type?: "dir" | "file";
-  children: FileData[];
-  describe: Partial<FileDescribe>;
-}
+import { FileData } from "../../../../core/dist/src/models/FileTree.js";
 
 // 样式文件类型正则表达式映射
 const StyleReg: Record<string, RegExp> = {
@@ -32,7 +18,6 @@ const StyleReg: Record<string, RegExp> = {
  */
 function processStyleFiles(plugin: keyof typeof StyleReg, fileData: FileData): FileData {
   const regex = StyleReg["css"];
-
   // 遍历文件树
   for (const srcDir of fileData.children) {
     if (path.basename(srcDir.path) === "src") {
@@ -60,22 +45,31 @@ export default (generatorAPI: GeneratorAPI) => {
       sass: "^1.81.0",
     },
   });
-  const preset = generatorAPI.getPreset();
   const fileData = generatorAPI.generator.getFiles().getFileData();
   // 处理样式文件
-  let styleType = "css";
-  if (preset.plugins["scss"]) {
-    styleType = "scss";
-  } else if (preset.plugins["less"]) {
-    styleType = "less";
-  }
-  processStyleFiles(styleType, fileData);
+  const cssType = generatorAPI.getCssType();
+  processStyleFiles(cssType, fileData);
   // 生成协议配置
   generatorAPI.protocolGenerate({
-    [pluginToTemplateProtocol.ENTRY_FILE]: {
+    [pluginToTemplateProtocol.INSERT_IMPORT_PROTOCOL]: {
       params: {
-        content: "import './styles/main.scss'",
-        priority: 1,
+        imports: [
+          {
+            dir: "src",
+            modules: [
+              {
+                name: "",
+                from: `./style/main.${generatorAPI.getCssType()}`,
+              },
+            ],
+          },
+        ],
+        astOptions: {
+          parserOptions: {
+            sourceType: "module",
+            plugins: ["jsx", "typescript"],
+          },
+        },
       },
     },
   });

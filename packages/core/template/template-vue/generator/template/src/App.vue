@@ -69,6 +69,6 @@ export default {
 };
 </script>
 
-<style lang="<%= VueEjs.styleType %>" scoped>
-@import "./index.<%= VueEjs.styleType %>";
+<style lang="<%= TemplateEjs.cssType %>" scoped>
+@import "./index.<%= TemplateEjs.cssType %>";
 </style>
