@@ -1,9 +1,8 @@
 import type GeneratorAPI from "@src/models/GeneratorAPI.js";
 import path from "path";
+import { FileData } from "@src/models/FileTree.js";
 
 import { pluginToTemplateProtocol } from "../../../../core/dist/src/configs/protocol.js";
-import { FileData } from "../../../../core/dist/src/models/FileTree.js";
-
 // 样式文件类型正则表达式映射
 const StyleReg: Record<string, RegExp> = {
   css: /\.css$/i,
