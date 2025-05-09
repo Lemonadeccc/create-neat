@@ -1,5 +1,5 @@
 import React from "react";
-import "./index.<%= TemplateEjs.cssType %>";
+import "./index.<%= TemplateEjs.env.cssType %>";
 
 function App() {
   /* slot: store-slot */

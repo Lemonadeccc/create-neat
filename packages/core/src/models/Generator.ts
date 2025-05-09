@@ -309,11 +309,17 @@ class Generator {
         version: "0.1.0",
       },
       TemplateEjs: {
-        VueName: "vue_test",
-        VueData: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        VueUsePinia: !!this.preset.plugins["pinia"],
-        ReactUseReactRouter: !!this.preset.plugins["react-router"],
-        cssType: this.getCssType(),
+        vue: {
+          name: "vue_test",
+          data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          usePinia: !!this.preset.plugins["pinia"],
+        },
+        react: {
+          useReactRouter: !!this.preset.plugins["react-router"],
+        },
+        env: {
+          cssType: this.getCssType(),
+        },
       },
     };
     this.files.addToTreeByTemplateDirPathAndEjs(templatePath, this.rootDirectory, options);
