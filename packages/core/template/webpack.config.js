@@ -4,10 +4,7 @@ const { DefinePlugin } = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const HtmlMinimizerPlugin = require('html-minimizer-webpack-plugin');
-const CompressionWebpackPlugin = require('compression-webpack-plugin');
-const BundleAnalyzerPlugin =
-  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+
 
 <% if (framework === 'react') { %>
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
@@ -25,64 +22,16 @@ const ElementPlus = require('unplugin-element-plus/webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
-const isAnalyzer = process.env.CLI === "analyzer";
-
-const developmentPlugins = isDevelopment ? [
-  <% if (framework === 'react') { %>
-  new ReactRefreshWebpackPlugin(),
-  <% if (language === "typescript") { %>
-  new ForkTsCheckerWebpackPlugin({ async: false }),
-  <% } %>
-  <% } %>
-  <% if (typeof(VueEjs)!= "undefined" && VueEjs.useElementPlus == true ) { %>
-    ElementPlus(),
-  <% } %>
-] : [];
-
-const productionPlugins = isProduction ? [
-  new MiniCssExtractPlugin({
-    filename: 'static/css/[name].[contenthash].css',
-    chunkFilename: 'static/css/[name].[contenthash].css',
-    ignoreOrder: true,
-  }),
-  new CompressionWebpackPlugin({
-    filename: '[path][base].gz',
-    algorithm: 'gzip',
-    test: /\.js$|\.json$|\.css/,
-    threshold: 10240,
-    minRatio: 0.8,
-  }),
-] : [];
-<%
-const paths = {
-  react: {
-    typescript: "'./src/index.tsx'",
-    javascript: "'./src/index.jsx'",
-  },
-  vue: {
-    typescript: "'./src/main.ts'",
-    javascript: "'./src/main.js'",
-  }
-};
-const defaultPath = "'./src/main.js'";
-const selectedPath = paths[framework]?.[language] || defaultPath;
-%>
 
 module.exports = {
   stats: 'errors-warnings',
-  entry: <%- selectedPath %>,
+  entry: <% if (framework === 'react') { %><% if (language === "typescript") { %>'./src/index.tsx'<% } else { %>'./src/index.jsx'<% } %><% } else if (framework === 'vue') { %><% if (language === "typescript") { %>'./src/main.ts'<% } else { %>'./src/main.js'<% } %><% } else { %>'./src/main.js'<% } %>,
   mode: isDevelopment ? 'development' : 'production',
   output: {
     path: isDevelopment ? undefined : path.resolve(__dirname, './dist'),
-    assetModuleFilename: 'assets/[hash][ext][query]',
-    filename: isDevelopment
-      ? 'static/js/[name].bundle.js'
-      : 'static/js/[name].[contenthash:8].bundle.js',
-    chunkFilename: isDevelopment
-      ? 'static/js/[name].chunk.js'
-      : 'static/js/[name].[contenthash:8].chunk.js',
+    assetModuleFilename: 'assets/[name].[contenthash:8][ext]',
+    filename: `js/[name]${isDevelopment ? '' : '.[contenthash:8]'}.js`,
     clean: true,
-    pathinfo: false,
   },
   module: {
     rules: [
@@ -95,36 +44,27 @@ module.exports = {
           <% } else { %>
           'style-loader'
           <% } %>
-          : MiniCssExtractPlugin.loader,'css-loader','postcss-loader'].filter(Boolean),
-      },
-      {
-        test: /\.(jpe?g|png|gif|webp|svg|mp4)$/,
-        type: 'asset',
-        generator: {
-          filename: './images/[hash:8][ext][query]',
-        },
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10 * 1024,
-          },
-        },
+          : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'postcss-loader'
+        ].filter(Boolean),
       },
       <% if (plugin ==='scss' ) { %>
       {
         test: /\.s[ac]ss$/i,
         use: [
-            'style-loader', 
-            'css-loader',   
-            'sass-loader',  
+          'style-loader',
+          'css-loader',
+          'sass-loader'
         ],
       },
       <% } %>
       {
-        test: /\.(woff|woff2|eot|ttf|otf)$/i,
-        type: 'asset/resource',
+        test: /\.(jpe?g|png|gif|webp|svg|mp4|woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset',
         generator: {
-          filename: './assets/fonts/[hash][ext][query]',
-        },
+          filename: '[path][name].[contenthash:8][ext]'
+        }
       },
       <% if (framework === 'vue') { %>
       {
@@ -133,9 +73,6 @@ module.exports = {
           {
             loader: "vue-loader",
             options: {
-              compilerOptions: {
-                preserveWhitespace: false,
-              },
               hotReload: isDevelopment,
             },
           },
@@ -147,90 +84,42 @@ module.exports = {
   resolve: {
     extensions: [<% if (framework === 'vue') { %>'.vue', <% } %>'.js', '.jsx', '.ts', '.tsx'],
     alias: {
-      '@pages': './src/pages',
       '@': './src',
     },
   },
   plugins: [
-  ...productionPlugins,
     new HtmlWebpackPlugin({
       template: './public/index.html',
       filename: 'index.html',
       title: 'moment',
-      inject: true,
-      hash: true,
-      minify: isDevelopment
-        ? false
-        : {
-            removeComments: true,
-            collapseWhitespace: true,
-            minifyCSS: true,
-            minifyJS: true,
-            caseSensitive: true,
-            removeRedundantAttributes: true,
-            removeEmptyAttributes: true,
-            removeStyleLinkTypeAttributes: true,
-            removeScriptTypeAttributes: true,
-            useShortDoctype: true,
-          },
     }),
     new DefinePlugin({
-      BASE_URL: '"./"',
       'process.env': JSON.stringify(process.env),
     }),
-    ...developmentPlugins,
-    <% if (framework === 'vue') { %>
-      new VueLoaderPlugin(),
+    isProduction && new MiniCssExtractPlugin({
+      filename: 'css/[name].[contenthash:8].css',
+    }),
+    <% if (framework === 'react') { %>
+    isDevelopment && new ReactRefreshWebpackPlugin(),
+    <% if (language === "typescript") { %>
+    isDevelopment && new ForkTsCheckerWebpackPlugin(),
     <% } %>
-    isAnalyzer ? new BundleAnalyzerPlugin() : false
+    <% } %>
+    <% if (typeof(VueEjs)!= "undefined" && VueEjs.useElementPlus == true) { %>
+    ElementPlus(),
+    <% } %>
+    <% if (framework === 'vue') { %>
+    new VueLoaderPlugin()<% } %>
   ].filter(Boolean),
-  performance: isProduction
-    ? {
-        hints: false,
-        maxEntrypointSize: 512000,
-        maxAssetSize: 512000,
-      }
-    : undefined,
   optimization: isProduction
     ? {
-        chunkIds: 'named',
-        moduleIds: 'deterministic',
         minimize: true,
-        usedExports: true,
         minimizer: [
-          new TerserPlugin({
-            test: /\.(tsx?|jsx?)$/,
-            include: [path.resolve(__dirname, './src')],
-            exclude: /node_modules/,
-            parallel: true,
-            terserOptions: {
-              toplevel: true,
-              ie8: true,
-              safari10: true,
-              compress: {
-                arguments: false,
-                dead_code: true,
-                pure_funcs: ['console.log'],
-              },
-            },
-          }),
+          new TerserPlugin(),
           new CssMinimizerPlugin(),
-          new HtmlMinimizerPlugin(),
         ],
         splitChunks: {
           chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              name: 'vendors',
-              enforce: true,
-              test: /[\\/]node_modules[\\/]/,
-              filename: 'static/js/[id]_vendors.js',
-              priority: 10,
-            },
-          },
-        },
-        runtimeChunk: {
-          name: 'runtime',
         },
       }
     : undefined,
