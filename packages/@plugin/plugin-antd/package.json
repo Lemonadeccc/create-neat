@@ -1,0 +1,10 @@
+{
+  "name": "@laconic/plugin-antd",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "antd plugin for react",
+  "scripts": {
+    "dev": "tsc -w"
+  },
+  "dependencies": {}
+}

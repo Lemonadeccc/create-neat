@@ -100,7 +100,9 @@ class FileTree {
       const fileContent = fs.readFileSync(src, "utf8");
       file.type = "file";
       file.describe = {
-        fileName: path.basename(src).split(".")[0],
+        //根据文件名的格式动态提取fileName（不包含扩展名）
+        fileName:
+          path.basename(src).split(".").slice(0, -1).join(".") || path.basename(src).split(".")[0],
         fileExtension: path.extname(src).slice(1),
         fileContent,
       };
@@ -142,7 +144,7 @@ class FileTree {
 
       file.type = "file";
       file.describe = {
-        fileName: path.basename(src).split(".")[0],
+        fileName: path.basename(src).split(".").slice(0, -1).join("."),
         fileExtension: path.extname(src).slice(1),
         fileContent,
       };

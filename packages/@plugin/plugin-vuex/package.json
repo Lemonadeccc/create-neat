@@ -1,0 +1,10 @@
+{
+  "name": "@laconic/plugin-vuex",
+  "version": "1.0.0",
+  "description": "vuex plugin for vue",
+  "dependencies": {},
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -w"
+  }
+}

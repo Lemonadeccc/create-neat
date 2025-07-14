@@ -1,6 +1,6 @@
-// 采用 ES Module 导入方式
-import { pluginToTemplateProtocol } from "@src/configs/protocol.js";
 import type GeneratorAPI from "@src/models/GeneratorAPI.js";
+
+import { pluginToTemplateProtocol } from "../../../../core/dist/src/configs/protocol.js";
 
 const routerPlugin = (generatorAPI: GeneratorAPI) => {
   generatorAPI.extendPackage({

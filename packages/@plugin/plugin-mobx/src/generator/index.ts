@@ -21,34 +21,61 @@ export default (generatorAPI: GeneratorAPI) => {
   generatorAPI.protocolGenerate({
     // 导入声明协议
     [pluginToTemplateProtocol.INSERT_IMPORT_PROTOCOL]: {
-      filePath: "src/App.tsx",
-      imports: [
-        {
-          name: "{ observer }",
-          source: "mobx-react-lite",
-          isTypeOnly: false,
+      params: {
+        imports: [
+          {
+            dir: "src/App",
+            modules: [
+              {
+                name: "observer",
+                from: "mobx-react-lite",
+              },
+            ],
+          },
+          {
+            dir: "src/App",
+            modules: [
+              {
+                name: "store",
+                from: "./counter",
+              },
+            ],
+          },
+        ],
+        astOptions: {
+          parserOptions: {
+            sourceType: "module",
+            plugins: ["jsx", "typescript"],
+          },
         },
-        {
-          name: "store",
-          source: "@/stores/counter",
-          isTypeOnly: false,
-        },
-      ],
+      },
     },
 
     // 导出包装协议
     [pluginToTemplateProtocol.UPDATE_EXPORT_CONTENT_PROTOCOL]: {
-      filePath: "src/App.tsx",
-      exportType: "named",
-      exportName: "ObserverApp",
-      wrapper: "observer",
+      params: {
+        url: "src/App",
+        exportContent: "observer",
+        astOptions: {
+          parserOptions: {
+            sourceType: "module",
+            plugins: ["jsx", "typescript"],
+          },
+        },
+      },
     },
 
     // 插槽内容注入协议
     [pluginToTemplateProtocol.SLOT_CONTENT_PROTOCOL]: {
-      filePath: "src/stores/counter.ts",
-      slotMarker: "/* observable-properties */",
-      content: "number = 0; // MobX observable value",
+      params: {
+        slotConfig: [
+          {
+            url: "src/App",
+            slotName: "store-slot",
+            slotContent: "const handleIncrement = () => store.increment();",
+          },
+        ],
+      },
     },
   });
 };

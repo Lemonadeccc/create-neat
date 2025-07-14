@@ -103,79 +103,86 @@ function mergeWebpackConfigAst(options: Options, ast) {
         // 匹配到module属性，将传入的options中的rules转化为ast进行插入
         if (property.key.name === "module") {
           const rulesAstNodes = [];
-          rules.forEach((rule) => {
-            const formatReg = (str) => str.substring(1, str.length - 1);
-            let parseIncludeAst;
-            let parseExcludeAst;
-            let parseLoaderAst;
-            let ruleAstNode;
-            // 如果include属性为数组
-            if (Array.isArray(rule.include)) {
-              // 处理include的处理逻辑，能够支持动态路径解析
-              parseIncludeAst = arrayExpression(
-                rule.include.map((item) => {
-                  if (typeof item === "object" && item.__astType === "pathResolve") {
-                    return createPathResolveCall(item.args);
-                  }
-                  return typeof item === "string"
-                    ? stringLiteral(item)
-                    : regExpLiteral(item.pattern);
-                }),
-              );
-            } else {
-              // 如果include属性值为正则表达式
-              parseIncludeAst = regExpLiteral(formatReg(`${rule.include}`));
-            }
-            // 如果exclude属性值为数组
-            if (Array.isArray(rule.exclude)) {
-              parseExcludeAst = arrayExpression(
-                rule.exclude.map((item) => regExpLiteral(formatReg(`${item}`))),
-              );
-            } else {
-              // 如果exclude属性值为正则
-              parseExcludeAst = regExpLiteral(formatReg(`${rule.exclude}`));
-            }
-            if (rule.loader) {
-              if (Array.isArray(rule.loader)) {
-                parseLoaderAst = arrayExpression(rule.loader.map((item) => stringLiteral(item)));
+          // 添加 rules 的空值检查
+          if (rules && Array.isArray(rules)) {
+            rules.forEach((rule) => {
+              const formatReg = (str) => str.substring(1, str.length - 1);
+              let parseIncludeAst;
+              let parseExcludeAst;
+              let parseLoaderAst;
+              let ruleAstNode;
+              // 如果include属性为数组
+              if (Array.isArray(rule.include)) {
+                // 处理include的处理逻辑，能够支持动态路径解析
+                parseIncludeAst = arrayExpression(
+                  rule.include.map((item) => {
+                    if (typeof item === "object" && item.__astType === "pathResolve") {
+                      return createPathResolveCall(item.args);
+                    }
+                    return typeof item === "string"
+                      ? stringLiteral(item)
+                      : regExpLiteral(item.pattern);
+                  }),
+                );
               } else {
-                parseLoaderAst = stringLiteral(rule.loader);
+                // 如果include属性值为正则表达式
+                parseIncludeAst = regExpLiteral(formatReg(`${rule.include}`));
               }
-              ruleAstNode = objectExpression([
-                createObjectProperty("test", regExpLiteral(formatReg(`${rule.test}`))),
-                createObjectProperty("include", parseIncludeAst),
-                createObjectProperty("exclude", parseExcludeAst),
-                createObjectProperty("loader", parseLoaderAst),
-              ]);
-            }
-            if (rule.use) {
-              // 兼容 use 为对象、字符串或数组的情况
-              const useArr = Array.isArray(rule.use) ? rule.use : [rule.use];
-              const parseUseAst = arrayExpression(
-                useArr.map((item) => {
-                  if (typeof item === "string") {
-                    return stringLiteral(item);
-                  } else {
-                    return objectExpression([
-                      createObjectProperty("loader", stringLiteral(item.loader)),
-                    ]);
-                  }
-                }),
-              );
-              ruleAstNode = objectExpression([
-                createObjectProperty("test", regExpLiteral(formatReg(`${rule.test}`))),
-                createObjectProperty("include", parseIncludeAst),
-                createObjectProperty("exclude", parseExcludeAst),
-                createObjectProperty("use", parseUseAst),
-              ]);
-            }
+              // 如果exclude属性值为数组
+              if (Array.isArray(rule.exclude)) {
+                parseExcludeAst = arrayExpression(
+                  rule.exclude.map((item) => regExpLiteral(formatReg(`${item}`))),
+                );
+              } else {
+                // 如果exclude属性值为正则
+                parseExcludeAst = regExpLiteral(formatReg(`${rule.exclude}`));
+              }
+              if (rule.loader) {
+                if (Array.isArray(rule.loader)) {
+                  parseLoaderAst = arrayExpression(rule.loader.map((item) => stringLiteral(item)));
+                } else {
+                  parseLoaderAst = stringLiteral(rule.loader);
+                }
+                ruleAstNode = objectExpression([
+                  createObjectProperty("test", regExpLiteral(formatReg(`${rule.test}`))),
+                  createObjectProperty("include", parseIncludeAst),
+                  createObjectProperty("exclude", parseExcludeAst),
+                  createObjectProperty("loader", parseLoaderAst),
+                ]);
+              }
+              if (rule.use) {
+                // 兼容 use 为对象、字符串或数组的情况
+                const useArr = Array.isArray(rule.use) ? rule.use : [rule.use];
+                const parseUseAst = arrayExpression(
+                  useArr.map((item) => {
+                    if (typeof item === "string") {
+                      return stringLiteral(item);
+                    } else {
+                      return objectExpression([
+                        createObjectProperty("loader", stringLiteral(item.loader)),
+                      ]);
+                    }
+                  }),
+                );
+                ruleAstNode = objectExpression([
+                  createObjectProperty("test", regExpLiteral(formatReg(`${rule.test}`))),
+                  createObjectProperty("include", parseIncludeAst),
+                  createObjectProperty("exclude", parseExcludeAst),
+                  createObjectProperty("use", parseUseAst),
+                ]);
+              }
 
-            rulesAstNodes.push(ruleAstNode);
-          });
-          const prevRulesAst = property.value.properties.find(
-            (property) => property.key.name === "rules",
-          );
-          rulesAstNodes.forEach((ast) => prevRulesAst.value.callee.object.elements.push(ast));
+              rulesAstNodes.push(ruleAstNode);
+            });
+          }
+          // 检查是否存在需要添加的规则 AST 节点
+          if (rulesAstNodes.length > 0) {
+            const prevRulesAst = property.value.properties.find(
+              (property) => property.key.name === "rules",
+            );
+            // 遍历所有规则 AST 节点，将其添加到之前找到的 "rules" 属性值的对应元素列表中
+            rulesAstNodes.forEach((ast) => prevRulesAst.value.callee.object.elements.push(ast));
+          }
         }
       });
     },

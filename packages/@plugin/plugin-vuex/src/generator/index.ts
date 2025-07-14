@@ -3,7 +3,7 @@ import type GeneratorAPI from "@src/models/GeneratorAPI.js";
 export default (generatorAPI: GeneratorAPI) => {
   generatorAPI.extendPackage({
     dependencies: {
-      pinia: "^2.2.2",
+      vuex: "^4.1.0",
     },
   });
 };

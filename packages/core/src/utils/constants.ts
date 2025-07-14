@@ -108,4 +108,6 @@ export const TSPluginNames = [
   "react-router",
   "scss",
   "typescript",
+  "vuex",
+  "antd",
 ];
